@@ -1,0 +1,15 @@
+{
+    "ident": "", 
+    "realname": "", 
+    "nick": "", 
+    "channels": [
+        ""
+    ], 
+    "ssl": true, 
+    "host": "", 
+    "trigger": "", 
+    "ownernick": "", 
+    "ownerhost": "",
+    "password": "", 
+    "port": 6697
+}
