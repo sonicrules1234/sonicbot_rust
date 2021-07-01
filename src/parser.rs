@@ -13,7 +13,9 @@ pub struct IRCMessage {
     pub message: Option<String>,
     pub command: Option<String>,
     pub commandargs: Option<Vec<String>>,
+    pub argstring: Option<String>,
     pub pong: Option<String>,
+    pub ctcp: Option<String>,
 }
 
 //pub fn parse(mut upperself: &mut SonicbotData, line: String) -> () {
@@ -32,8 +34,10 @@ pub fn parse(line: String, nick: String, comprefix: String) -> IRCMessage {
     let mut message = None;
     let mut command = None;
     let mut commandargs = None;
+    let mut argstring = None;
     let mut commandarglist: Vec<String> = Vec::new();
     let mut pong = None;
+    let mut ctcp = None;
     if rawwords[0] == ":PING" || rawwords[0] == "PING" {
         pong = Some(rawwords[1].to_string());
     }
@@ -63,6 +67,10 @@ pub fn parse(line: String, nick: String, comprefix: String) -> IRCMessage {
                 } else {
                     message = Some(words[3..].join(" "))
                 }
+                if message.as_ref().unwrap().starts_with("\x01") && message.as_ref().unwrap().ends_with("\x01") {
+                    //println!("{:?}", message.as_ref().unwrap()[1..(message.as_ref().unwrap().len())].to_string());
+                    ctcp = Some(message.as_ref().unwrap()[1..(message.as_ref().unwrap().len() - 1)].to_string());
+                }
                 if message.as_ref().unwrap().starts_with(&comprefix) {
                     command = Some(message.as_ref().unwrap().split(" ").collect::<Vec<&str>>()[0].to_string()[1..].to_string())
                 }
@@ -71,6 +79,7 @@ pub fn parse(line: String, nick: String, comprefix: String) -> IRCMessage {
                         commandarglist.push(carg.to_string());
                     }
                     commandargs = Some(commandarglist);
+                    argstring = Some(commandargs.as_ref().unwrap().join(" "));
                 }
             }
         }
@@ -87,6 +96,8 @@ pub fn parse(line: String, nick: String, comprefix: String) -> IRCMessage {
         message: message,
         command: command,
         commandargs: commandargs,
+        argstring: argstring,
         pong: pong,
+        ctcp: ctcp,
     }
 }

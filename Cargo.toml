@@ -1,15 +1,35 @@
 [package]
 name = "sonicbot"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Westly Ward <sonicrules1234@gmail.com>"]
 edition = "2018"
 
+
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["lib", "cdylib"]
 
 [dependencies]
 rustls = "0.19.1"
 webpki = "0.21"
 webpki-roots = "0.21.0"
-acid-store = "0.6.0"
-serde = "1.0.126"
+serde = { version = "1.0.126", features = ["derive"] }
 serde_json = "1.0.64"
+rand = "0.8.4"
+
+
+[target.'cfg(target_os = "android")'.dependencies]
+rustls = "0.19.1"
+webpki = "0.21"
+webpki-roots = "0.21.0"
+serde = { version = "1.0.126", features = ["derive"] }
+serde_json = "1.0.64"
+ndk = "0.3.0"
+ndk-glue = "0.3.0"
+
+[[package.metadata.android.uses_permission]]
+name = "android.permission.INTERNET"
+
+[package.metadata.android]
+build_targets = [ "armv7-linux-androideabi", "aarch64-linux-android" ]
