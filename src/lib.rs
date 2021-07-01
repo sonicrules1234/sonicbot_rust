@@ -1,5 +1,7 @@
 mod socketwrapper;
 mod parser;
+mod plugins;
+mod msgfmts;
 //use std::collections::BTreeMap;
 //use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -102,6 +104,13 @@ impl SonicbotData {
     fn commandok(&mut self, command: &str, permlevel: u8, ircmsg: &IRCMessage) -> bool {
         ircmsg.command.as_ref().unwrap() == command && self.haspermission(ircmsg, permlevel)
     }
+    fn runplugin(&mut self, commands: Vec<msgfmts::Message>) -> () {
+        for msg in commands {
+            match msg {
+                msgfmts::Message::SendMsg(recipient, message) => self.sendmsg(recipient, message),
+            };
+        }
+    }
     fn takeaction(&mut self, ircmsgorig: IRCMessage, initialchannels: &Vec<String>) -> Option<String> {
         let ircmsg = &ircmsgorig;
         if ircmsg.numeric.is_some() {
@@ -118,9 +127,10 @@ impl SonicbotData {
             if self.commandok("greet", 0, ircmsg) {
                 self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("Hello {}.", ircmsg.sender.as_ref().unwrap()));
             } else if self.commandok("choose", 1, ircmsg) {
-                let choices = ircmsg.argstring.as_ref().unwrap().split(" or ").collect::<Vec<&str>>();
-                let choice = choices.choose(&mut rand::thread_rng()).unwrap().to_string();
-                self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("I choose {}.", choice)); 
+                //let choices = ircmsg.argstring.as_ref().unwrap().split(" or ").collect::<Vec<&str>>();
+                //let choice = choices.choose(&mut rand::thread_rng()).unwrap().to_string();
+                //self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("I choose {}.", choice)); 
+                self.runplugin(plugins::choose::main(&ircmsg));
             } else if self.commandok("quit", 5, ircmsg) {
                 //self.rawsend("QUIT: Got quit command!\r\n".to_string());
                 return Some("QUIT".to_string());

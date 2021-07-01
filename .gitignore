@@ -1,3 +1,9 @@
 /target
 /conf.json
 /sonicbotdata
+/releases
+/result
+/Cargo.lock
+/src/conf.json
+/release.sh
+
