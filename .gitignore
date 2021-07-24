@@ -6,4 +6,6 @@
 /Cargo.lock
 /src/conf.json
 /release.sh
-
+/linewrapper/Cargo.lock
+/storage.db
+/linewrapper/target

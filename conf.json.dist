@@ -11,5 +11,6 @@
     "ownernick": "", 
     "ownerhost": "",
     "password": "", 
-    "port": 6697
+    "port": 6697,
+    "hostlabel":""
 }
