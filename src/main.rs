@@ -49,10 +49,12 @@ async fn main() {
     let datadirbuf = datadir.to_path_buf();
     let confpathbuf = datadir.join("conf.json");
     let confpath = confpathbuf.as_path();
+    let mut firstrun = false;
     if !confpath.exists() {
         let mut confdist = fs::File::create(&confpath).unwrap();
         confdist.write_all(defaultdata.as_bytes()).unwrap();
-        return;
+        firstrun = true;
+        //return;
     }
     let wholeversion: String = format!("sonicbot_rust_v{}", VERSION.unwrap());
     let data = fs::read_to_string(confpath.to_str().unwrap()).unwrap();
@@ -64,10 +66,14 @@ async fn main() {
     if onandroid {
         use linewrapper::LineWrapper;
         let mut linew = LineWrapper::new();
-        thread::spawn(move || {
-            let mut sbot = SonicbotData::new(p.host, p.port, p.nick, p.ssl, p.ident, p.realname, p.ownernick, p.ownerhost, p.trigger, p.hostlabel, wholeversion, datadirbuf, onandroid, tx.clone());
-            sbot.start(password, channels);
-        });
+        if !firstrun {
+            thread::spawn(move || {
+                let mut sbot = SonicbotData::new(p.host, p.port, p.nick, p.ssl, p.ident, p.realname, p.ownernick, p.ownerhost, p.trigger, p.hostlabel, wholeversion, datadirbuf, onandroid, tx.clone());
+                sbot.start(password, channels);
+            });
+        } else {
+            linew.println(format!("Blank config created at {}.  Please go and edit it before running the bot again.", confpath.display()));
+        }
         loop {
             match rx.try_recv() {
                 Ok(rx) => linew.println(rx),
@@ -103,9 +109,11 @@ fn main() {
     let datadirbuf = datadir.to_path_buf();
     let confpathbuf = datadir.join("conf.json");
     let confpath = confpathbuf.as_path();
+    //let mut firstrun = false;
     if !confpath.exists() {
         let mut confdist = fs::File::create(&confpath).unwrap();
         confdist.write_all(defaultdata.as_bytes()).unwrap();
+        println!("Blank config created at {}.  Please go and edit it before running the bot again.", confpath.display());
         return;
     }
     let wholeversion: String = format!("sonicbot_rust_v{}", VERSION.unwrap());
@@ -117,5 +125,4 @@ fn main() {
     let mut sbot = SonicbotData::new(p.host, p.port, p.nick, p.ssl, p.ident, p.realname, p.ownernick, p.ownerhost, p.trigger, p.hostlabel, wholeversion, datadirbuf, onandroid, tx.clone());
     //let mut sonicb = sbot.as_mut();
     sbot.start(p.password, p.channels);
-//    $crate::main();
 }
