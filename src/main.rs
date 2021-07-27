@@ -60,12 +60,12 @@ async fn main() {
     let password = p.password.as_str().to_string();
     let channels = p.channels.to_vec();
     //onandroid = true;
-    let mut sbot = SonicbotData::new(p.host, p.port, p.nick, p.ssl, p.ident, p.realname, p.ownernick, p.ownerhost, p.trigger, p.hostlabel, wholeversion, datadirbuf, onandroid, tx.clone());
     //let mut sonicb = sbot.as_mut();
     if onandroid {
         use linewrapper::LineWrapper;
         let mut linew = LineWrapper::new();
         thread::spawn(move || {
+            let mut sbot = SonicbotData::new(p.host, p.port, p.nick, p.ssl, p.ident, p.realname, p.ownernick, p.ownerhost, p.trigger, p.hostlabel, wholeversion, datadirbuf, onandroid, tx.clone());
             sbot.start(password, channels);
         });
         loop {
@@ -79,8 +79,6 @@ async fn main() {
             linew.showlines();
             next_frame().await;
         }
-    } else {
-        sbot.start(p.password, p.channels);        
     }
 //    $crate::main();
 }
