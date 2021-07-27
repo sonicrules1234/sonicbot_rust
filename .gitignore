@@ -9,3 +9,9 @@
 /linewrapper/Cargo.lock
 /storage.db
 /linewrapper/target
+/sonicobject/target
+/sonicobject/Cargo.lock
+/sonicobject/test.db
+/sonicmacros/target
+/sonicmacros/Cargo.lock
+

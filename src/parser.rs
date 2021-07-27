@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct IRCMessage {
     pub raw: String,
     //pub rawmsg: String,
+    pub word1: Option<String>,
     pub msgtype: Option<String>,
     pub numeric: Option<String>,
     pub whois: Option<String>,
@@ -27,6 +28,7 @@ pub fn parse(line: String, nick: String, comprefix: String) -> IRCMessage {
     let rawwords = raw.split(" ").collect::<Vec<&str>>();
     //let rawmsg = rawwords.join(" ");
     let mut msgtype = None;
+    let mut word1 = None;
     let mut whois = None;
     let mut sender = None;
     let mut hostname = None;
@@ -50,6 +52,9 @@ pub fn parse(line: String, nick: String, comprefix: String) -> IRCMessage {
     };
     if numeric.is_none() {
         msgtype = Some(words[1].to_string());
+    }
+    if numeric.is_some() || msgtype.as_ref().is_some() {
+        word1 = Some(words[1].to_string());
     }
     if msgtype.as_ref().is_some() {
         if vec!("PRIVMSG".to_string(), "NOTICE".to_string()).contains(msgtype.as_ref().unwrap()) {
@@ -87,6 +92,7 @@ pub fn parse(line: String, nick: String, comprefix: String) -> IRCMessage {
     IRCMessage {
         raw: raw,
         //rawmsg: rawmsg,
+        word1: word1,
         msgtype: msgtype,
         numeric: numeric,
         whois: whois,

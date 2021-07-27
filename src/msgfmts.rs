@@ -1,5 +1,11 @@
+use crate::SonicObject;
 pub enum Message {
     SendMsg(String, String),
+    SaveData(String, SonicObject),
+    PartChannel(String, Option<String>),
+    JoinChannel(String),
+    SendRawData(String),
+    SendPM(String, String),
 }
 //pub struct SendMsg {
 //    recipient: String,
