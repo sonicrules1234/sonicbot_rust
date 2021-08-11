@@ -14,7 +14,7 @@ pub fn syntax() -> String {
 pub fn help() -> String {
     "Returns a random fact.".to_string()
 }
-pub fn main(ircmsg: IRCMessage, db: &mut SonicObject, essentials: SonicObject) -> Vec<msgfmts::Message> {
+pub fn main(ircmsg: IRCMessage, _db: &mut SonicObject, _essentials: SonicObject, _userdata: &mut SonicObject) -> Vec<msgfmts::Message> {
     let data = reqwest::blocking::get("http://randomfunfacts.com/").unwrap().text().unwrap();
     let matcher = Regex::new(r#"<strong><i>(.*)</i></strong>"#).unwrap();
     let mut returnmsgs: Vec<msgfmts::Message> = Vec::new();

@@ -29,11 +29,11 @@ impl SonicObject {
         SonicObject::new(self.value.get(key.to_string()).unwrap().to_owned())
     }
     pub fn contains(&mut self, key: &str) -> bool {
-        let mut svalue = self.value.as_object_mut().unwrap();
+        let svalue = self.value.as_object_mut().unwrap();
         svalue.contains_key(key)
     }
     pub fn insert(&mut self, key: &str, value: impl Serialize) -> () {
-        let mut svalue = self.value.as_object_mut().unwrap();
+        let svalue = self.value.as_object_mut().unwrap();
         //println!("svalue is now '{:?}'", svalue);
         ////println!("svalue = '{:?}'", svalue);
         let sobject = serde_json::to_string(&value).unwrap();
@@ -60,7 +60,7 @@ impl SonicObject {
         self.value = v;
     }
     pub fn remove(&mut self, key: &str) -> () {
-        let mut svalue = self.value.as_object_mut().unwrap();
+        let svalue = self.value.as_object_mut().unwrap();
         ////println!("svalue = '{:?}'", svalue);
         //let sobject = serde_json::to_string(&value).unwrap();
         ////println!("sobject = '{:?}'", sobject);
@@ -97,7 +97,7 @@ impl SonicObject {
 }
 impl SonicPersistObject {
     pub fn new(filepath: PathBuf) -> Self {
-        let mut tree = OpenOptions::new().mode(OpenMode::Create).open(&DirectoryConfig{ path: filepath }).unwrap();//sled::open(&filepath).unwrap();
+        let tree = OpenOptions::new().mode(OpenMode::Create).open(&DirectoryConfig{ path: filepath }).unwrap();//sled::open(&filepath).unwrap();
         Self {
             tree: tree,
         }
@@ -132,11 +132,11 @@ pub fn getemptyvalue() -> Value {
 #[cfg(test)]
 mod tests {
     use std::fs;
-    use std::path::{Path, PathBuf};
+    use std::path::{Path};
     use crate::SonicPersistObject;
-    use serde_json::Value;
+    
     use serde_json::json;
-    use std::collections::HashMap;
+    
     #[test]
     fn it_works() {
         if Path::new("test.db").exists() {

@@ -13,10 +13,8 @@ pub fn syntax() -> String {
 pub fn help() -> String {
     "Greets you.".to_string()
 }
-pub fn main(ircmsg: IRCMessage, db: &mut SonicObject, essentials: SonicObject) -> Vec<msgfmts::Message> {
+pub fn main(ircmsg: IRCMessage, _db: &mut SonicObject, _essentials: SonicObject, _userdata: &mut SonicObject) -> Vec<msgfmts::Message> {
     let mut returnmsgs: Vec<msgfmts::Message> = Vec::new();
-    //let channel = &ircmsg.commandargs.as_ref().unwrap()[0];
-    //let choice = choices.choose(&mut rand::thread_rng()).unwrap().to_string();
     returnmsgs.push(msgfmts::Message::SendMsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("Hello {}.", ircmsg.sender.as_ref().unwrap())));
     returnmsgs
 }

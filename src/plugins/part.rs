@@ -14,7 +14,7 @@ pub fn syntax() -> String {
 pub fn help() -> String {
     "Parts from <channel> with [reason] as a reason if it is given.".to_string()
 }
-pub fn main(ircmsg: IRCMessage, db: &mut SonicObject, essentials: SonicObject) -> Vec<msgfmts::Message> {
+pub fn main(ircmsg: IRCMessage, _db: &mut SonicObject, _essentials: SonicObject, _userdata: &mut SonicObject) -> Vec<msgfmts::Message> {
     let mut returnmsgs: Vec<msgfmts::Message> = Vec::new();
     let reason: Option<String>;
     if ircmsg.commandargs.as_ref().unwrap().len() > 1 {

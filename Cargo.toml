@@ -1,6 +1,6 @@
 [package]
 name = "sonicbot"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Westly Ward <sonicrules1234@gmail.com>"]
 edition = "2018"
 
@@ -20,13 +20,14 @@ rand = "0.8.4"
 reqwest = { version = "0.10", default-features = false, features = ["blocking", "rustls-tls"] }
 #sled = "0.34.6"
 sonicobject = { path = "./sonicobject" }
-acid-store = { version = "0.8.0", features = ["store-directory"] }
+acid-store = { version = "0.9.1", features = ["store-directory"] }
 sonicmacros = { path = "./sonicmacros" }
 humantime = "2.1.0"
 textwrap = "0.14.2"
 regex = "1.5.4"
+hex = "0.4.3"
+sha2 = "0.9.5"
 #empty-option = "0.1.1"
-
 
 [target.'cfg(target_os = "android")'.dependencies]
 macroquad = "0.3.7"
@@ -43,6 +44,7 @@ linewrapper = { path = "./linewrapper" }
 #empty-option = "0.1.1"
 #ndk = "0.3.0"
 #ndk-glue = "0.3.0"
+
 
 [[package.metadata.android.permission]]
 name = "android.permission.INTERNET"

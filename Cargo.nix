@@ -87,7 +87,7 @@ rec {
     #   inject test dependencies into the build
 
     crates = {
-      "acid-store" = rec {
+      "acid-store 0.8.0" = rec {
         crateName = "acid-store";
         version = "0.8.0";
         edition = "2018";
@@ -178,6 +178,89 @@ rec {
           "store-rclone" = [ "store-sftp" "rand" ];
           "store-redis" = [ "redis" ];
           "store-s3" = [ "rust-s3" ];
+          "store-sftp" = [ "ssh2" ];
+          "store-sqlite" = [ "rusqlite" ];
+        };
+        resolvedDefaultFeatures = [ "default" "store-directory" ];
+      };
+      "acid-store 0.9.1" = rec {
+        crateName = "acid-store";
+        version = "0.9.1";
+        edition = "2018";
+        sha256 = "0jqzswjd7xld0ycvwj2iyj5v3mlh66fm289gc83pklpjziv5inpk";
+        authors = [
+          "Wren Powell <wrentpowell@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "anyhow";
+            packageId = "anyhow";
+          }
+          {
+            name = "bitflags";
+            packageId = "bitflags";
+          }
+          {
+            name = "blake3";
+            packageId = "blake3";
+          }
+          {
+            name = "cdchunking";
+            packageId = "cdchunking";
+          }
+          {
+            name = "digest";
+            packageId = "digest";
+          }
+          {
+            name = "hex-literal";
+            packageId = "hex-literal";
+          }
+          {
+            name = "once_cell";
+            packageId = "once_cell";
+          }
+          {
+            name = "rmp";
+            packageId = "rmp";
+          }
+          {
+            name = "rmp-serde";
+            packageId = "rmp-serde";
+          }
+          {
+            name = "secrecy";
+            packageId = "secrecy";
+          }
+          {
+            name = "serde";
+            packageId = "serde";
+            features = [ "derive" "rc" ];
+          }
+          {
+            name = "thiserror";
+            packageId = "thiserror";
+          }
+          {
+            name = "uuid";
+            packageId = "uuid";
+            features = [ "serde" "v4" ];
+          }
+          {
+            name = "weak-table";
+            packageId = "weak-table";
+          }
+        ];
+        features = {
+          "compression" = [ "lz4" ];
+          "encryption" = [ "sodiumoxide" "rand" ];
+          "file-metadata" = [ "repo-file" "nix" "filetime" "xattr" "users" "exacl" ];
+          "fuse-mount" = [ "fuse" "bimap" "time" "tempfile" "file-metadata" ];
+          "hash-algorithms" = [ "blake2" "sha2" "sha3" ];
+          "repo-file" = [ "relative-path" "walkdir" "hole-punch" ];
+          "store-rclone" = [ "store-sftp" "rand" ];
+          "store-redis" = [ "redis" ];
+          "store-s3" = [ "rust-s3" "tokio" ];
           "store-sftp" = [ "ssh2" ];
           "store-sqlite" = [ "rusqlite" ];
         };
@@ -596,6 +679,22 @@ rec {
           "std" = [ "digest/std" ];
         };
         resolvedDefaultFeatures = [ "default" "std" ];
+      };
+      "block-buffer" = rec {
+        crateName = "block-buffer";
+        version = "0.9.0";
+        edition = "2018";
+        sha256 = "1r4pf90s7d7lj1wdjhlnqa26vvbm6pnc33z138lxpnp9srpi2lj1";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "generic-array";
+            packageId = "generic-array";
+          }
+        ];
+
       };
       "bumpalo" = rec {
         crateName = "bumpalo";
@@ -1056,6 +1155,28 @@ rec {
         features = {
           "asio" = [ "asio-sys" "num-traits" ];
         };
+      };
+      "cpufeatures" = rec {
+        crateName = "cpufeatures";
+        version = "0.1.5";
+        edition = "2018";
+        sha256 = "1vvid867wpnz5wzma3f4x2ijl83fgr6x1fc6shspzpf9ysb9djb6";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: (stdenv.hostPlatform.config == "aarch64-apple-darwin");
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: ((target."arch" == "aarch64") && (target."os" == "linux"));
+          }
+        ];
+
       };
       "crc32fast" = rec {
         crateName = "crc32fast";
@@ -1814,6 +1935,20 @@ rec {
           "rustc-dep-of-std" = [ "core" "compiler_builtins/rustc-dep-of-std" "libc/rustc-dep-of-std" ];
         };
         resolvedDefaultFeatures = [ "default" ];
+      };
+      "hex" = rec {
+        crateName = "hex";
+        version = "0.4.3";
+        edition = "2018";
+        sha256 = "0w1a4davm1lgzpamwnba907aysmlrnygbqmfis2mqjx5m552a93z";
+        authors = [
+          "KokaKiwi <kokakiwi@kokakiwi.net>"
+        ];
+        features = {
+          "default" = [ "std" ];
+          "std" = [ "alloc" ];
+        };
+        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
       };
       "hex-literal" = rec {
         crateName = "hex-literal";
@@ -3510,6 +3645,16 @@ rec {
         };
         resolvedDefaultFeatures = [ "alloc" "default" "race" "std" ];
       };
+      "opaque-debug" = rec {
+        crateName = "opaque-debug";
+        version = "0.3.0";
+        edition = "2018";
+        sha256 = "1m8kzi4nd6shdqimn0mgb24f0hxslhnqd1whakyq06wcqd086jk2";
+        authors = [
+          "RustCrypto Developers"
+        ];
+
+      };
       "parking_lot" = rec {
         crateName = "parking_lot";
         version = "0.11.1";
@@ -4805,6 +4950,62 @@ rec {
         ];
 
       };
+      "sha2" = rec {
+        crateName = "sha2";
+        version = "0.9.5";
+        edition = "2018";
+        sha256 = "04lzf4swq6cijvxnc6facr3g72h5v7a5z8lz3xrkf8gxa9bswqmk";
+        authors = [
+          "RustCrypto Developers"
+        ];
+        dependencies = [
+          {
+            name = "block-buffer";
+            packageId = "block-buffer";
+          }
+          {
+            name = "cfg-if";
+            packageId = "cfg-if 1.0.0";
+          }
+          {
+            name = "cpufeatures";
+            packageId = "cpufeatures";
+            target = { target, features }: (stdenv.hostPlatform.config == "aarch64-apple-darwin");
+          }
+          {
+            name = "cpufeatures";
+            packageId = "cpufeatures";
+            target = { target, features }: ((target."arch" == "aarch64") && (target."os" == "linux"));
+          }
+          {
+            name = "cpufeatures";
+            packageId = "cpufeatures";
+            target = { target, features }: ((target."arch" == "x86") || (target."arch" == "x86_64"));
+          }
+          {
+            name = "digest";
+            packageId = "digest";
+          }
+          {
+            name = "opaque-debug";
+            packageId = "opaque-debug";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "digest";
+            packageId = "digest";
+            features = [ "dev" ];
+          }
+        ];
+        features = {
+          "asm" = [ "sha2-asm" ];
+          "asm-aarch64" = [ "asm" ];
+          "default" = [ "std" ];
+          "std" = [ "digest/std" ];
+        };
+        resolvedDefaultFeatures = [ "default" "std" ];
+      };
       "shlex" = rec {
         crateName = "shlex";
         version = "0.1.1";
@@ -4901,7 +5102,7 @@ rec {
       };
       "sonicbot" = rec {
         crateName = "sonicbot";
-        version = "0.1.4";
+        version = "0.1.5";
         edition = "2018";
         crateBin = [
           { name = "sonicbot"; path = "src/main.rs"; }
@@ -4913,8 +5114,12 @@ rec {
         dependencies = [
           {
             name = "acid-store";
-            packageId = "acid-store";
+            packageId = "acid-store 0.9.1";
             features = [ "store-directory" ];
+          }
+          {
+            name = "hex";
+            packageId = "hex";
           }
           {
             name = "humantime";
@@ -4956,6 +5161,10 @@ rec {
           {
             name = "serde_json";
             packageId = "serde_json";
+          }
+          {
+            name = "sha2";
+            packageId = "sha2";
           }
           {
             name = "sonicmacros";
@@ -5002,7 +5211,7 @@ rec {
         dependencies = [
           {
             name = "acid-store";
-            packageId = "acid-store";
+            packageId = "acid-store 0.8.0";
             features = [ "store-directory" ];
           }
           {

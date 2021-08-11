@@ -15,7 +15,7 @@ pub fn syntax() -> String {
 pub fn help() -> String {
     "Chooses a random choice from <choices>.".to_string()
 }
-pub fn main(ircmsg: IRCMessage, db: &mut SonicObject, essentials: SonicObject) -> Vec<msgfmts::Message> {
+pub fn main(ircmsg: IRCMessage, _db: &mut SonicObject, _essentials: SonicObject, _userdata: &mut SonicObject) -> Vec<msgfmts::Message> {
     let mut returnmsgs: Vec<msgfmts::Message> = Vec::new();
     let choices = ircmsg.argstring.as_ref().unwrap().split(" or ").collect::<Vec<&str>>();
     let choice = choices.choose(&mut rand::thread_rng()).unwrap().to_string();

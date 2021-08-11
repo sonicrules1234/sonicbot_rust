@@ -19,7 +19,7 @@ pub fn syntax() -> String {
 pub fn help() -> String {
     "Returns time since <nick> was seen.".to_string()
 }
-pub fn main(ircmsg: IRCMessage, db: &mut SonicObject, essentials: SonicObject) -> Vec<msgfmts::Message> {
+pub fn main(ircmsg: IRCMessage, _db: &mut SonicObject, essentials: SonicObject, _userdata: &mut SonicObject) -> Vec<msgfmts::Message> {
     let mut returnmsgs: Vec<msgfmts::Message> = Vec::new();
     if essentials.get("PRIVMSG").get("seen").contains(ircmsg.commandargs.as_ref().unwrap()[0].as_str()) {
         let dur = essentials.get("PRIVMSG").get("seen").getvalue(ircmsg.commandargs.as_ref().unwrap()[0].as_str());

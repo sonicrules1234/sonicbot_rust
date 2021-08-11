@@ -1,7 +1,8 @@
 use crate::SonicObject;
 pub enum Message {
     SendMsg(String, String),
-    SaveData(String, SonicObject),
+    SavePluginData(String, SonicObject),
+    SaveUserData(SonicObject),
     PartChannel(String, Option<String>),
     JoinChannel(String),
     SendRawData(String),

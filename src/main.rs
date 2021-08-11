@@ -1,6 +1,6 @@
 use sonicbot::SonicbotData;
 
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use std::io::Write;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -91,7 +91,7 @@ async fn main() {
 
 #[cfg(not(target_os = "android"))]
 fn main() {
-    let (tx, rx) = channel::<String>();
+    let (tx, _rx) = channel::<String>();
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
     let defaultdata = include_str!("../conf.json.dist").to_string();
     let onandroid = false;
@@ -119,8 +119,8 @@ fn main() {
     let wholeversion: String = format!("sonicbot_rust_v{}", VERSION.unwrap());
     let data = fs::read_to_string(confpath.to_str().unwrap()).unwrap();
     let p: SonicbotConfig = serde_json::from_str(data.as_str()).unwrap();
-    let password = p.password.as_str().to_string();
-    let channels = p.channels.to_vec();
+    //let password = p.password.as_str().to_string();
+    //let channels = p.channels.to_vec();
     //onandroid = true;
     let mut sbot = SonicbotData::new(p.host, p.port, p.nick, p.ssl, p.ident, p.realname, p.ownernick, p.ownerhost, p.trigger, p.hostlabel, wholeversion, datadirbuf, onandroid, tx.clone());
     //let mut sonicb = sbot.as_mut();

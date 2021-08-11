@@ -33,7 +33,7 @@ impl SocketWrapper {
     pub fn connect(&mut self) -> () {
         println!("{}:{}", self.host, self.port.to_string());
         let socket = TcpStream::connect(format!("{}:{}", self.host, self.port.to_string())).unwrap();
-        socket.set_read_timeout(Some(std::time::Duration::new(1, 0))).unwrap();
+        socket.set_read_timeout(Some(std::time::Duration::from_millis(500))).unwrap();
         //socket.set_nodelay(true).unwrap();
         println!("Connected");
         if self.ssl {

@@ -4,21 +4,21 @@ mod plugins;
 mod msgfmts;
 //use std::collections::BTreeMap;
 //use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::SystemTime;
 use parser::{IRCMessage};
 use socketwrapper::SocketWrapper;
 //use macroquad::prelude::*;
-use std::sync::mpsc::TryRecvError;
+//use std::sync::mpsc::TryRecvError;
 //use acid_store::repo::{OpenOptions, value::ValueRepo, OpenMode};
 //use acid_store::store::{DirectoryConfig};
 //use acid_store::store::MemoryStore;
 //use rand::seq::SliceRandom;
 //use sled::Db;
-use std::io::Write;
-use serde::{Deserialize, Serialize};
+//use std::io::Write;
+//use serde::{Deserialize, Serialize};
 //use serde_json::Result;
-use std::fs;
+//use std::fs;
 //use linewrapper::LineWrapper;
 use sonicmacros::backinsert;
 use sonicobject::{SonicPersistObject, SonicObject};
@@ -27,6 +27,14 @@ pub enum CommandErrorReason {
     MinArgsError(u8),
     NoSuchCommand(String),
     NoCommandMatch(bool),
+}
+pub enum PermissionErrorReason {
+    HostMismatch(bool),
+    NotOwner(bool),
+    NotChannelOwner(String),
+    NotAdmin(bool),
+    NotRegistered(bool),
+    LevelTooLow(u8),
 }
 //#[allow(dead_code)]
 pub struct SonicbotData {
@@ -41,8 +49,9 @@ pub struct SonicbotData {
     comprefix: String,
     wholeversion: String,
     hostlabel: String,
-    datadir: PathBuf,
+    //datadir: PathBuf,
     db: SonicPersistObject,
+    networkdata: SonicObject,
     essentialslist: Vec<String>,
     onandroid: bool,
     tx: std::sync::mpsc::Sender<String>,
@@ -53,7 +62,7 @@ impl SonicbotData {
         //let rep = OpenOptions::new(MemoryStore::new()).create::<ValueRepo<String, _>>().unwrap();
         let mut db = SonicPersistObject::new(datadir.as_path().join(format!("sonicbotdata_{}", hostlabel).as_str()));
         let modlist = plugins::ModList::new();
-        let essentialslist = vec!["PRIVMSG".to_string(), "JOIN".to_string(), "PART".to_string()];
+        let essentialslist = vec!["PRIVMSG".to_string(), "JOIN".to_string(), "PART".to_string(), "NICK".to_string()];
         if !db.contains("essentials") {
             db.insert("essentials", sonicobject::getemptyvalue());
         }
@@ -74,6 +83,12 @@ impl SonicbotData {
                 db.insert("plugins", newinsert.value);
             }
         }
+        if !db.contains("users") {
+            db.insert("users", sonicobject::getemptyvalue());
+        }
+        let mut networkdata = SonicObject::new(sonicobject::getemptyvalue());
+        networkdata.insert("channels", sonicobject::getemptyvalue());
+        networkdata.insert("nicks", sonicobject::getemptyvalue());
         //let mut linew = LineWrapper::new();
         Self {
             swrapper: Box::new(SocketWrapper::new(host.to_string(), port, ssl)),
@@ -87,8 +102,9 @@ impl SonicbotData {
             comprefix: comprefix.to_string(),
             wholeversion: wholeversion,
             hostlabel: hostlabel,
-            datadir: datadir,
+            //datadir: datadir,
             db: db,
+            networkdata: networkdata,
             essentialslist: essentialslist, 
             onandroid: onandroid,
             tx: tx.clone(),
@@ -107,9 +123,9 @@ impl SonicbotData {
     fn rawsend(&mut self, msg: String) -> () {
         self.swrapper.write_all(msg.as_str().to_string());
         if !self.onandroid {
-            println!("[OUT] {}", msg.as_str().to_string().replace("\r", "").replace("\n", ""));
+            println!("[OUT {}] {}", self.hostlabel, msg.as_str().to_string().replace("\r", "").replace("\n", ""));
         } else {
-            self.tx.send(format!("[OUT] {}", msg.as_str().to_string().replace("\r", "").replace("\n", ""))).unwrap();
+            self.tx.send(format!("[OUT {}] {}", self.hostlabel, msg.as_str().to_string().replace("\r", "").replace("\n", ""))).unwrap();
         }
     }
     fn nicksend(&mut self) -> () {
@@ -128,9 +144,9 @@ impl SonicbotData {
                 if line != String::new() {
                     if self.onandroid {
                         self.tx.send(format!("[IN] {}", line)).unwrap();
-                        println!("[IN] {}", line);
+                        println!("[IN {}] {}", self.hostlabel, line);
                     } else {
-                        println!("[IN] {}", line);
+                        println!("[IN {}] {}", self.hostlabel, line);
                     }
                     let ircmsg = parser::parse(line.to_string(), self.nick.clone(), self.comprefix.clone());
                     exitwith = self.takeaction(ircmsg, initialchannels.as_ref());
@@ -179,22 +195,80 @@ impl SonicbotData {
             self.sendnotice(recipient, message);
         }
     }
-    fn haspermission(&mut self, ircmsg: &IRCMessage, permlevel: u8) -> bool {
-        if permlevel == 5 {
+    fn haspermission(&mut self, ircmsg: &IRCMessage, permlevel: u8) -> Result<bool, PermissionErrorReason> {
+        if ircmsg.sender.as_ref().unwrap() == self.ownernick.as_str() && ircmsg.hostname.as_ref().unwrap() == self.ownerhost.as_str() {
+            return Ok(true);
+        } else if permlevel == 5 {
             if ircmsg.sender.as_ref().unwrap() == self.ownernick.as_str() && ircmsg.hostname.as_ref().unwrap() == self.ownerhost.as_str() {
-                return true;
+                return Ok(true);
             } else {
                 //println!("'{}' != '{}' and '{}' != '{}'", ircmsg.sender.as_ref().unwrap(), self.ownernick.as_str(), ircmsg.hostname.as_ref().unwrap(), self.ownerhost.as_str());
-                return false;
+                return Err(PermissionErrorReason::NotOwner(false));
             }
+        } else if permlevel == 4 {
+            return Err(PermissionErrorReason::NotAdmin(false));
+        } else if permlevel == 3 {
+            return Err(PermissionErrorReason::NotChannelOwner(ircmsg.channel.as_ref().unwrap().to_string()))
+        } else if permlevel == 2 {
+            if self.db.get("users").contains(ircmsg.sender.as_ref().unwrap()) {    
+                let mut thisuser = self.db.get("users").get(ircmsg.sender.as_ref().unwrap());
+                let hostvec: Vec<String> = thisuser.getvalue("hostnames").as_array().unwrap().to_vec().iter().filter_map(|x| Some(x.as_str().unwrap().to_string())).collect();
+                if hostvec.contains(ircmsg.hostname.as_ref().unwrap()) {
+                    return Ok(true);
+                } else {
+                    return Err(PermissionErrorReason::HostMismatch(false));
+                }
+            } else {
+                return Err(PermissionErrorReason::NotRegistered(false));
+            }
+        } else if permlevel == 1 {
+            return Ok(true);
         } else {
-            return true;
+            return Err(PermissionErrorReason::LevelTooLow(permlevel));
+        }
+    }
+    fn handle_haspermission(&mut self, ircmsg: &IRCMessage, permlevel: u8) -> bool {
+        match self.haspermission(ircmsg, permlevel) {
+            Ok(x) => return x,
+            Err(PermissionErrorReason::HostMismatch(_x)) => {
+                self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), "Your hostname does not match any of the registered hostnames for your nick.  If it is really you, try using the addhost command.".to_string());
+                return false;
+            },
+            Err(PermissionErrorReason::NotOwner(_x)) => {
+                self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), "You are not the owner of this bot.".to_string());
+                return false;
+            },
+            Err(PermissionErrorReason::NotAdmin(_x)) => {
+                self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), "You are not an admin of this bot.".to_string());
+                return false;
+            },
+            Err(PermissionErrorReason::NotChannelOwner(_x)) => {
+                self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), "You are not registered with this bot as owner of this channel.".to_string());
+                return false;
+            },
+            Err(PermissionErrorReason::NotRegistered(_x)) => {
+                self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), "This command requires you to be registered with this bot.  Use the nickreg command to register your nick.".to_string());
+                return false;
+            },
+            Err(PermissionErrorReason::LevelTooLow(x)) => {
+                self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("Your user level is too low.  This command requires a minimum user level of {}.", x));
+                return false;
+            },
+        }
+    }
+    fn handle_haspermission_noreason(&mut self, ircmsg: &IRCMessage, permlevel: u8) -> bool {
+        match self.haspermission(ircmsg, permlevel) {
+            Ok(_x) => return true,
+            Err(_) => {
+                //self.sendmsg(ircmsg.sender.as_ref().unwrap().to_string(), "Your hostname does not match any of the registered hostnames for your nick.  If it is really you, try using the addhost command.".to_string());
+                return false;
+            },
         }
     }
     fn commandok(&mut self, command: &str, permlevel: u8, ircmsg: &IRCMessage, minargs: u8) -> Result<bool, CommandErrorReason> {
         let modlist = plugins::ModList::new();
         if modlist.modnames.clone().contains(&command.to_string()) {
-            if ircmsg.command.as_ref().unwrap() == command && self.haspermission(ircmsg, permlevel) {
+            if ircmsg.command.as_ref().unwrap() == command && self.handle_haspermission(ircmsg, permlevel) {
                 if minargs == 0 {
                     Ok(true)
                 } else if ircmsg.commandargs.is_some() {
@@ -218,27 +292,27 @@ impl SonicbotData {
     fn handle_commandok(&mut self, command: &str, permlevel: u8, ircmsg: &IRCMessage, minargs: u8) -> bool {
         match self.commandok(command, permlevel, ircmsg, minargs) {
             Ok(x) => return x,
-            Err(CommandErrorReason::NoSuchCommand(x)) => {
+            Err(CommandErrorReason::NoSuchCommand(_x)) => {
                 self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("No such command: {}.", command));
                 return false;
             },
-            Err(CommandErrorReason::PermissionError(x)) => {
-                self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("{}: You do not have the required permissions to run this command.", ircmsg.sender.as_ref().unwrap()));
+            Err(CommandErrorReason::PermissionError(_x)) => {
+                //self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("{}: You do not have the required permissions to run this command.", ircmsg.sender.as_ref().unwrap()));
                 return false;
             },
             Err(CommandErrorReason::MinArgsError(x)) => {
                 if minargs > 1 {
-                    self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("{}: Minimum number of arguments not met.  The {} command requires at least {} arguments.", ircmsg.sender.as_ref().unwrap(), command, minargs));
+                    self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("{}: Minimum number of arguments not met.  The {} command requires at least {} arguments.", ircmsg.sender.as_ref().unwrap(), command, x));
                 } else {
-                    self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("{}: Minimum number of arguments not met.  The {} command requires at least {} argument.", ircmsg.sender.as_ref().unwrap(), command, minargs));
+                    self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), format!("{}: Minimum number of arguments not met.  The {} command requires at least {} argument.", ircmsg.sender.as_ref().unwrap(), command, x));
                 }
                 return false;
             },
-            Err(CommandErrorReason::NoCommandMatch(x)) => return false,
+            Err(CommandErrorReason::NoCommandMatch(_x)) => return false,
         };
     }
     fn handle_commandok_notthere(&mut self, command: &str, permlevel: u8, ircmsg: &IRCMessage, minargs: u8) -> bool {
-        if ircmsg.command.as_ref().unwrap() == command && self.haspermission(ircmsg, permlevel) {
+        if ircmsg.command.as_ref().unwrap() == command && self.handle_haspermission_noreason(ircmsg, permlevel) {
             if minargs == 0 {
                 true
             } else if ircmsg.commandargs.is_some() {
@@ -254,24 +328,25 @@ impl SonicbotData {
             false
         }
     }
-    fn handle_commandok_noreason(&mut self, command: &str, permlevel: u8, ircmsg: &IRCMessage, minargs: u8) -> bool {
-        match self.commandok(command, permlevel, ircmsg, minargs) {
-            Ok(x) => return x,
-            Err(CommandErrorReason::MinArgsError(x)) => return false,
-            Err(CommandErrorReason::PermissionError(x)) => return false,
-            Err(CommandErrorReason::NoSuchCommand(x)) => return false,
-            Err(CommandErrorReason::NoCommandMatch(x)) => return false,
-        }        
-    }
+    //fn handle_commandok_noreason(&mut self, command: &str, permlevel: u8, ircmsg: &IRCMessage, minargs: u8) -> bool {
+    //    match self.commandok(command, permlevel, ircmsg, minargs) {
+    //        Ok(x) => return x,
+    //        Err(CommandErrorReason::MinArgsError(_x)) => return false,
+    //        Err(CommandErrorReason::PermissionError(_x)) => return false,
+    //        Err(CommandErrorReason::NoSuchCommand(_x)) => return false,
+    //        Err(CommandErrorReason::NoCommandMatch(_x)) => return false,
+    //    }        
+    //}
     fn runplugin(&mut self, commands: Vec<msgfmts::Message>) -> () {
         for msg in commands {
             match msg {
                 msgfmts::Message::SendMsg(recipient, message) => self.sendmsg(recipient, message),
-                msgfmts::Message::SaveData(pluginname, data) => {
+                msgfmts::Message::SavePluginData(pluginname, data) => {
                     let mut newinsert = self.db.get("plugins");
                     newinsert.insert(pluginname.as_str(), data.value);
                     self.db.insert("plugins", newinsert.value);
                 },
+                msgfmts::Message::SaveUserData(data) => self.db.insert("users", data.value),
                 msgfmts::Message::SendRawData(rawdata) => self.rawsend(rawdata),
                 msgfmts::Message::JoinChannel(channelname) => self.joinchannel(channelname),
                 msgfmts::Message::PartChannel(channelname, reason) => self.partchannel(channelname, reason),
@@ -313,10 +388,10 @@ impl SonicbotData {
                 self.sendpm(ircmsg.sender.as_ref().unwrap().to_string(), format!("\x01VERSION {}\x01.", self.wholeversion));
             }
         } else if ircmsg.command.is_some() {
-            let mut modlist = plugins::ModList::new();
+            let modlist = plugins::ModList::new();
             if modlist.modnames.clone().contains(ircmsg.command.as_ref().unwrap()) {
                 if self.handle_commandok(ircmsg.command.as_ref().unwrap(), modlist.permissions[ircmsg.command.as_ref().unwrap()], ircmsg, modlist.minargs[ircmsg.command.as_ref().unwrap()]) {
-                    self.runplugin(modlist.mainfunctions[ircmsg.command.as_ref().unwrap()](ircmsg.clone(), &mut self.db.get("plugins").get(ircmsg.command.as_ref().unwrap().as_str()), self.db.get("essentials")));
+                    self.runplugin(modlist.mainfunctions[ircmsg.command.as_ref().unwrap()](ircmsg.clone(), &mut self.db.get("plugins").get(ircmsg.command.as_ref().unwrap().as_str()), self.db.get("essentials"), &mut self.db.get("users")));
                 }
             }
             if self.handle_commandok_notthere("quit", 5, ircmsg, 0) {

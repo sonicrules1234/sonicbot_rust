@@ -48,7 +48,7 @@ pub fn backinsert(item: TokenStream) -> TokenStream {
     }
     //println!("1");
     let lastitemindex = items.len() - 1;
-    let lastvalue = items.last().unwrap();
+    //let lastvalue = items.last().unwrap();
     let firstvalue = &items.clone()[0];
     //println!("2");
     for (num, token) in items.clone().into_iter().enumerate() {
@@ -107,7 +107,7 @@ use crate::msgfmts;
     }
     code.push_str(r#"pub struct ModList {
         pub modnames: Vec<String>,
-        pub mainfunctions: HashMap<String, Box<dyn Fn(IRCMessage, &mut SonicObject, SonicObject) -> Vec<msgfmts::Message>>>,
+        pub mainfunctions: HashMap<String, Box<dyn Fn(IRCMessage, &mut SonicObject, SonicObject, &mut SonicObject) -> Vec<msgfmts::Message>>>,
         pub permissions: HashMap<String, u8>,
         pub syntaxes: HashMap<String, String>,
         pub helps: HashMap<String, String>,
@@ -115,7 +115,7 @@ use crate::msgfmts;
     }
     impl ModList {
         pub fn new() -> Self {
-            let mut mainfunctions: HashMap<String, Box<dyn Fn(IRCMessage, &mut SonicObject, SonicObject) -> Vec<msgfmts::Message>>> = HashMap::new();
+            let mut mainfunctions: HashMap<String, Box<dyn Fn(IRCMessage, &mut SonicObject, SonicObject, &mut SonicObject) -> Vec<msgfmts::Message>>> = HashMap::new();
             let mut permissions: HashMap<String, u8> = HashMap::new();
             let mut syntaxes: HashMap<String, String> = HashMap::new();
             let mut helps: HashMap<String, String> = HashMap::new();
