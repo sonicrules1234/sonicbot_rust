@@ -8,7 +8,7 @@ use std::fs;
 use serde_json::Value;
 use std::thread;
 //use futures::executor::block_on;
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{TryRecvError, channel};
 //use futures::{
 //    future::FutureExt, // for `.fuse()`
 //    pin_mut,
@@ -57,7 +57,7 @@ async fn main() {
     //let wholeversion: String = format!("sonicbot_rust_v{}", VERSION.unwrap());
     let data = fs::read_to_string(confpath.to_str().unwrap()).unwrap();
     let mut networklist: Vec<SonicbotConfig> = Vec::new();
-    let v: Value = serde_json::from_str(data.as_str());
+    let v: Value = serde_json::from_str(data.as_str()).unwrap();
     for val in v.as_array().unwrap().to_vec() {
         networklist.push(serde_json::from_value::<SonicbotConfig>(val).unwrap());
     }
