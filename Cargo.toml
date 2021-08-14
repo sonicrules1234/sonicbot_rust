@@ -1,6 +1,6 @@
 [package]
 name = "sonicbot"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Westly Ward <sonicrules1234@gmail.com>"]
 edition = "2018"
 
@@ -27,6 +27,7 @@ textwrap = "0.14.2"
 regex = "1.5.4"
 hex = "0.4.3"
 sha2 = "0.9.5"
+ctrlc = "3.1.9"
 #empty-option = "0.1.1"
 
 [target.'cfg(target_os = "android")'.dependencies]

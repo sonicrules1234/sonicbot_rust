@@ -90,6 +90,7 @@ impl SonicbotData {
         networkdata.insert("channels", sonicobject::getemptyvalue());
         networkdata.insert("nicks", sonicobject::getemptyvalue());
         //let mut linew = LineWrapper::new();
+
         Self {
             swrapper: Box::new(SocketWrapper::new(host.to_string(), port, ssl)),
             //ssl: ssl,
