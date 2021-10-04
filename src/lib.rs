@@ -5,6 +5,7 @@ mod msgfmts;
 //use std::collections::BTreeMap;
 //use std::collections::HashMap;
 use std::path::PathBuf;
+use chrono::*;
 use std::time::SystemTime;
 use parser::{IRCMessage};
 use socketwrapper::SocketWrapper;
@@ -20,8 +21,10 @@ use socketwrapper::SocketWrapper;
 //use serde_json::Result;
 //use std::fs;
 //use linewrapper::LineWrapper;
+use aiml_ported::kernel::Kernel;
 use sonicmacros::backinsert;
 use sonicobject::{SonicPersistObject, SonicObject};
+use sonic_serde_object::SonicSerdeObject;
 pub enum CommandErrorReason {
     PermissionError(u8),
     MinArgsError(u8),
@@ -49,46 +52,49 @@ pub struct SonicbotData {
     comprefix: String,
     wholeversion: String,
     hostlabel: String,
-    //datadir: PathBuf,
+    datadir: PathBuf,
     db: SonicPersistObject,
     networkdata: SonicObject,
     essentialslist: Vec<String>,
     onandroid: bool,
     tx: std::sync::mpsc::Sender<String>,
+    aimlkernel: Kernel,
+    useaiml: bool,
 }
 impl SonicbotData {
-    pub fn new(host: String, port: u16, nick: String, ssl: bool, ident: String, realname: String, ownernick: String, ownerhost: String, comprefix: String, hostlabel: String, wholeversion: String, datadir: PathBuf, onandroid: bool, tx: std::sync::mpsc::Sender<String>) -> Self {
+    pub fn new(host: String, port: u16, nick: String, ssl: bool, ident: String, realname: String, ownernick: String, ownerhost: String, comprefix: String, hostlabel: String, wholeversion: String, datadir: PathBuf, onandroid: bool, tx: std::sync::mpsc::Sender<String>, aimlkernel: Kernel, useaiml: bool) -> Self {
         //let mut rep = OpenOptions::new().mode(OpenMode::Create).open(&DirectoryConfig{ path: datadir.as_path().join(format!("sonicbotdata_{}", hostlabel).as_str()) }).unwrap();//.create::<ValueRepo<String, _>>().unwrap();
         //let rep = OpenOptions::new(MemoryStore::new()).create::<ValueRepo<String, _>>().unwrap();
         let mut db = SonicPersistObject::new(datadir.as_path().join(format!("sonicbotdata_{}", hostlabel).as_str()));
         let modlist = plugins::ModList::new();
         let essentialslist = vec!["PRIVMSG".to_string(), "JOIN".to_string(), "PART".to_string(), "NICK".to_string()];
         if !db.contains("essentials") {
-            db.insert("essentials", sonicobject::getemptyvalue());
+            db.insert("essentials", SonicSerdeObject::new_map());
         }
+        
         for essentialname in &essentialslist {
             if !db.get("essentials").contains(essentialname.as_str()) {
                 let mut newinsert = db.get("essentials");
-                newinsert.insert(essentialname.as_str(), sonicobject::getemptyvalue());
+                newinsert.insert(essentialname.as_str(), SonicSerdeObject::new_map());
                 db.insert("essentials", newinsert.value);
             }
         }
         if !db.contains("plugins") {
-            db.insert("plugins", sonicobject::getemptyvalue());
+            db.insert("plugins", SonicSerdeObject::new_map());
         }
         for pluginname in modlist.modnames {
             if !db.get("plugins").contains(pluginname.as_str()) {
                 let mut newinsert = db.get("plugins");
-                newinsert.insert(pluginname.as_str(), sonicobject::getemptyvalue());
+                newinsert.insert(pluginname.as_str(), SonicSerdeObject::new_map());
                 db.insert("plugins", newinsert.value);
             }
         }
         if !db.contains("users") {
-            db.insert("users", sonicobject::getemptyvalue());
+            db.insert("users", SonicSerdeObject::new_map());
         }
-        let mut networkdata = SonicObject::new(sonicobject::getemptyvalue());
-        networkdata.insert("channels", sonicobject::getemptyvalue());
-        networkdata.insert("nicks", sonicobject::getemptyvalue());
+        let mut networkdata = SonicObject::new(SonicSerdeObject::new_map());
+        networkdata.insert("channels", SonicSerdeObject::new_map());
+        networkdata.insert("nicks", SonicSerdeObject::new_map());
         //let mut linew = LineWrapper::new();
 
         Self {
@@ -103,12 +109,14 @@ impl SonicbotData {
             comprefix: comprefix.to_string(),
             wholeversion: wholeversion,
             hostlabel: hostlabel,
-            //datadir: datadir,
+            datadir: datadir,
             db: db,
             networkdata: networkdata,
             essentialslist: essentialslist, 
             onandroid: onandroid,
             tx: tx.clone(),
+            aimlkernel: aimlkernel,
+            useaiml: useaiml,
         }
     }
     fn connect(&mut self) -> () {
@@ -149,7 +157,7 @@ impl SonicbotData {
                     } else {
                         println!("[IN {}] {}", self.hostlabel, line);
                     }
-                    let ircmsg = parser::parse(line.to_string(), self.nick.clone(), self.comprefix.clone());
+                    let ircmsg = parser::parse(line.to_string(), self.nick.clone(), self.comprefix.clone(), self.nick.clone());
                     exitwith = self.takeaction(ircmsg, initialchannels.as_ref());
                     //let status = crate::keepgoing(rx);
                     //if status == "showlines" {
@@ -212,8 +220,8 @@ impl SonicbotData {
             return Err(PermissionErrorReason::NotChannelOwner(ircmsg.channel.as_ref().unwrap().to_string()))
         } else if permlevel == 2 {
             if self.db.get("users").contains(ircmsg.sender.as_ref().unwrap()) {    
-                let mut thisuser = self.db.get("users").get(ircmsg.sender.as_ref().unwrap());
-                let hostvec: Vec<String> = thisuser.getvalue("hostnames").as_array().unwrap().to_vec().iter().filter_map(|x| Some(x.as_str().unwrap().to_string())).collect();
+                let mut thisuser = self.db.get("users").get(ircmsg.sender.as_ref().unwrap()).unwrap();
+                let hostvec: Vec<String> = thisuser.getvalue("hostnames").unwrap().as_vec().unwrap().to_vec().iter().filter_map(|x| Some(x.as_str().unwrap().to_string())).collect();
                 if hostvec.contains(ircmsg.hostname.as_ref().unwrap()) {
                     return Ok(true);
                 } else {
@@ -360,12 +368,12 @@ impl SonicbotData {
         if ircmsg.word1.is_some() {
             if self.essentialslist.contains(&ircmsg.word1.as_ref().unwrap().to_string()) {
                 if ircmsg.word1.as_ref().unwrap().as_str() == "PRIVMSG" {
-                    if !self.db.get("essentials").get("PRIVMSG").contains("seen") {
+                    if !self.db.get("essentials").get("PRIVMSG").unwrap().contains("seen") {
                         //let mut newinsert = self.db.get("essentials").get("PRIVMSG");
-                        //newinsert.insert("seen", sonicobject::getemptyvalue());
+                        //newinsert.insert("seen", SonicSerdeObject::new_map());
                         let mut xobj = self.db.get("essentials");
                         //self.db.insert("essentials", );
-                        let emptyval = sonicobject::getemptyvalue();
+                        let emptyval = SonicSerdeObject::new_map();
                         backinsert!(["PRIVMSG", "seen", emptyval]);
                         self.db.insert("essentials", xobj.value);
                     } else if ircmsg.channel.is_some() {
@@ -386,13 +394,18 @@ impl SonicbotData {
             }
         } else if ircmsg.ctcp.is_some() {
             if ircmsg.ctcp.as_ref().unwrap() == "VERSION" {
-                self.sendpm(ircmsg.sender.as_ref().unwrap().to_string(), format!("\x01VERSION {}\x01.", self.wholeversion));
+                self.sendnotice(ircmsg.sender.as_ref().unwrap().to_string(), format!("\x01VERSION {}\x01", self.wholeversion));
+            } else if ircmsg.ctcp.as_ref().unwrap() == "TIME" {
+                self.sendnotice(ircmsg.sender.as_ref().unwrap().to_string(), format!("\x01TIME {}\x01", Local::now().to_rfc2822()));
             }
+        } else if ircmsg.aimlcommand.is_some() && self.useaiml {
+            let response = self.aimlkernel.respond_session(ircmsg.aimlcommand.as_ref().unwrap(), ircmsg.whois.as_ref().unwrap());
+            self.sendmsg(ircmsg.channel.as_ref().unwrap().to_string(), response);
         } else if ircmsg.command.is_some() {
             let modlist = plugins::ModList::new();
             if modlist.modnames.clone().contains(ircmsg.command.as_ref().unwrap()) {
                 if self.handle_commandok(ircmsg.command.as_ref().unwrap(), modlist.permissions[ircmsg.command.as_ref().unwrap()], ircmsg, modlist.minargs[ircmsg.command.as_ref().unwrap()]) {
-                    self.runplugin(modlist.mainfunctions[ircmsg.command.as_ref().unwrap()](ircmsg.clone(), &mut self.db.get("plugins").get(ircmsg.command.as_ref().unwrap().as_str()), self.db.get("essentials"), &mut self.db.get("users")));
+                    self.runplugin(modlist.mainfunctions[ircmsg.command.as_ref().unwrap()](ircmsg.clone(), &mut self.db.get("plugins").get(ircmsg.command.as_ref().unwrap().as_str()).unwrap(), self.db.get("essentials"), &mut self.db.get("users")));
                 }
             }
             if self.handle_commandok_notthere("quit", 5, ircmsg, 0) {

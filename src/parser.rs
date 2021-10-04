@@ -17,18 +17,20 @@ pub struct IRCMessage {
     pub argstring: Option<String>,
     pub pong: Option<String>,
     pub ctcp: Option<String>,
+    pub aimlcommand: Option<String>,
 }
 
 //pub fn parse(mut upperself: &mut SonicbotData, line: String) -> () {
 //    let ircmsg: IRCMessage = parseirc(line);
 //    upperself.rawsend("Blah".to_string())
 //}
-pub fn parse(line: String, nick: String, comprefix: String) -> IRCMessage {
+pub fn parse(line: String, nick: String, comprefix: String, botnick: String) -> IRCMessage {
     let raw = line.clone();
     let rawwords = raw.split(" ").collect::<Vec<&str>>();
     //let rawmsg = rawwords.join(" ");
     let mut msgtype = None;
     let mut word1 = None;
+    let mut aimlcommand = None;
     let mut whois = None;
     let mut sender = None;
     let mut hostname = None;
@@ -57,35 +59,42 @@ pub fn parse(line: String, nick: String, comprefix: String) -> IRCMessage {
         word1 = Some(words[1].to_string());
     }
     if msgtype.as_ref().is_some() {
-        if vec!("PRIVMSG".to_string(), "NOTICE".to_string()).contains(msgtype.as_ref().unwrap()) {
-            whois = Some(words[0].to_owned());
-            if whois.as_ref().unwrap().contains("!") {
-                sender = Some(whois.as_ref().unwrap().split("!").collect::<Vec<&str>>()[0].to_string());
-                hostname = Some(whois.as_ref().unwrap().split("@").collect::<Vec<&str>>()[1].to_string());
-                if sender.as_ref().unwrap() == nick.as_str() {
-                    channel = Some(sender.as_ref().unwrap().to_string());
-                } else {
-                    channel = Some(words[2].to_string().replace(":", ""));
+        whois = Some(words[0].to_owned());
+        if whois.as_ref().unwrap().contains("!") {
+            sender = Some(whois.as_ref().unwrap().split("!").collect::<Vec<&str>>()[0].to_string());
+            hostname = Some(whois.as_ref().unwrap().split("@").collect::<Vec<&str>>()[1].to_string());
+            channel = Some(words[2].to_string().replace(":", ""));
+            if channel.as_ref().unwrap() == nick.as_str() {
+                channel = Some(sender.as_ref().unwrap().to_string());
+            }
+        }
+                //if sender.as_ref().unwrap() == nick.as_str() {
+                //    channel = Some(sender.as_ref().unwrap().to_string());
+                //} else {
+                //    channel = Some(words[2].to_string().replace(":", ""));
+                //}
+        if vec!("PRIVMSG".to_string()).contains(msgtype.as_ref().unwrap()) {
+            if words[3].contains(":") {
+                message = Some(words[3..].join(" ")[1..].to_string())
+            } else {
+                message = Some(words[3..].join(" "))
+            }
+            if message.as_ref().unwrap().starts_with("\x01") && message.as_ref().unwrap().ends_with("\x01") {
+                //println!("{:?}", message.as_ref().unwrap()[1..(message.as_ref().unwrap().len())].to_string());
+                ctcp = Some(message.as_ref().unwrap()[1..(message.as_ref().unwrap().len() - 1)].to_string());
+            }
+            if message.as_ref().unwrap().starts_with(format!("{}: ", botnick).as_str()) {
+                aimlcommand = Some(message.as_ref().unwrap().split_once(": ").unwrap().1.to_string());
+            }
+            if message.as_ref().unwrap().starts_with(&comprefix) {
+                command = Some(message.as_ref().unwrap().split(" ").collect::<Vec<&str>>()[0].to_string()[1..].to_string())
+            }
+            if command.as_ref().is_some() && message.as_ref().unwrap().split(" ").collect::<Vec<&str>>().len() > 1 {
+                for carg in words[4..].into_iter() {
+                    commandarglist.push(carg.to_string());
                 }
-                if words[3].contains(":") {
-                    message = Some(words[3..].join(" ")[1..].to_string())
-                } else {
-                    message = Some(words[3..].join(" "))
-                }
-                if message.as_ref().unwrap().starts_with("\x01") && message.as_ref().unwrap().ends_with("\x01") {
-                    //println!("{:?}", message.as_ref().unwrap()[1..(message.as_ref().unwrap().len())].to_string());
-                    ctcp = Some(message.as_ref().unwrap()[1..(message.as_ref().unwrap().len() - 1)].to_string());
-                }
-                if message.as_ref().unwrap().starts_with(&comprefix) {
-                    command = Some(message.as_ref().unwrap().split(" ").collect::<Vec<&str>>()[0].to_string()[1..].to_string())
-                }
-                if command.as_ref().is_some() && message.as_ref().unwrap().split(" ").collect::<Vec<&str>>().len() > 1 {
-                    for carg in words[4..].into_iter() {
-                        commandarglist.push(carg.to_string());
-                    }
-                    commandargs = Some(commandarglist);
-                    argstring = Some(commandargs.as_ref().unwrap().join(" "));
-                }
+                commandargs = Some(commandarglist);
+                argstring = Some(commandargs.as_ref().unwrap().join(" "));
             }
         }
     }
@@ -105,5 +114,6 @@ pub fn parse(line: String, nick: String, comprefix: String) -> IRCMessage {
         argstring: argstring,
         pong: pong,
         ctcp: ctcp,
+        aimlcommand: aimlcommand,
     }
 }

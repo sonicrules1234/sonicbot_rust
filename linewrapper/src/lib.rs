@@ -1,6 +1,5 @@
 use macroquad::prelude::*;
 pub struct LineWrapper {
-    ttffont: Font,
     lines: Vec<String>,
     cols: u8,
     rows: u8,
@@ -10,14 +9,14 @@ pub struct LineWrapper {
 }
 impl LineWrapper {
     pub fn new() -> Self {
-        let ttffont = load_ttf_font_from_bytes(include_bytes!("font.ttf")).unwrap();
+        let ttffont = macroquad::text::Font::default();
         let mut lines: Vec<String> = Vec::new();
-        let chardims = measure_text("a", Some(ttffont), 14, 1.0);
+        let chardims = measure_text("a", Some(ttffont), 16, 1.0);
         let charh = chardims.height + 10.0;
         let charw = chardims.width;
         let textp = TextParams {
             font: ttffont,
-            font_size: 14,
+            font_size: 16,
             font_scale: 1.0,
             font_scale_aspect: 1.0,
             color: WHITE,
@@ -35,7 +34,6 @@ impl LineWrapper {
         }
         hcount -= 1;
         Self {
-            ttffont: ttffont,
             lines: lines,
             cols: wcount,
             rows: hcount,

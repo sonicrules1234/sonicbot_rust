@@ -20,16 +20,16 @@ pub fn help() -> String {
 pub fn main(ircmsg: IRCMessage, _db: &mut SonicObject, _essentials: SonicObject, userdata: &mut SonicObject) -> Vec<msgfmts::Message> {
     let mut returnmsgs: Vec<msgfmts::Message> = Vec::new();
     if userdata.contains(ircmsg.sender.as_ref().unwrap()) {
-        let saltstring = userdata.get(ircmsg.sender.as_ref().unwrap()).getvalue("salt");
+        let saltstring = userdata.get(ircmsg.sender.as_ref().unwrap()).unwrap().getvalue("salt").unwrap();
         let mut unhashed = ircmsg.commandargs.as_ref().unwrap()[0].to_string();
         unhashed.push_str(saltstring.as_str().unwrap());
         let mut hasher = Sha512::new();
         hasher.update(unhashed.as_bytes());
         let result = hasher.finalize();
         let hexresult = hex::encode(result);
-        if hexresult == userdata.get(ircmsg.sender.as_ref().unwrap()).getvalue("hash").as_str().unwrap() {
-            let mut thisuser = userdata.get(ircmsg.sender.as_ref().unwrap());
-            let mut hostnames = thisuser.get("hostnames");
+        if hexresult == userdata.get(ircmsg.sender.as_ref().unwrap()).unwrap().getvalue("hash").unwrap().as_str().unwrap() {
+            let mut thisuser = userdata.get(ircmsg.sender.as_ref().unwrap()).unwrap();
+            let mut hostnames = thisuser.get("hostnames").unwrap();
             hostnames.push(ircmsg.hostname.as_ref().unwrap().to_string());
             thisuser.insert("hostnames", hostnames.value);
             returnmsgs.push(msgfmts::Message::SaveUserData(userdata.clone()));    

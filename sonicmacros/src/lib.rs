@@ -53,9 +53,9 @@ pub fn backinsert(item: TokenStream) -> TokenStream {
     //println!("2");
     for (num, token) in items.clone().into_iter().enumerate() {
         if num < (lastitemindex - 1) && num != 0 {
-            code.push_str(format!("let mut item{} = item{}.get({});\n", num, num - 1, token).as_str());
+            code.push_str(format!("let mut item{} = item{}.get({}).unwrap();\n", num, num - 1, token).as_str());
         } else if num == 0 {
-            code.push_str(format!("let mut item0 = xobj.get({});\n", token).as_str())
+            code.push_str(format!("let mut item0 = xobj.get({}).unwrap();\n", token).as_str())
         }
     }
     //println!("3");
@@ -92,7 +92,7 @@ pub fn pluginmacro(_item: TokenStream) -> TokenStream {
     //println!("1");
     let mut code = r#"use std::collections::HashMap;
 use crate::parser::IRCMessage;
-use crate::SonicObject;
+use sonicobject::SonicObject;
 use crate::msgfmts;
 "#.to_string();
     for pfr in potentialfilesresults {

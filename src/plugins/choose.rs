@@ -1,7 +1,7 @@
 use rand::seq::SliceRandom;
 use crate::msgfmts;
 use crate::parser::IRCMessage;
-use crate::SonicObject;
+use sonicobject::SonicObject;
 //use acid_store::repo::value::ValueRepo;
 pub fn permissionlevel() -> u8 {
     1

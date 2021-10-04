@@ -1,18 +1,22 @@
-[
+{
+  "useaiml": false,
+  "aimlbrain": "",
+  "networks": [
     {
-        "ident": "", 
-        "realname": "", 
-        "nick": "", 
-        "channels": [
-            ""
-        ], 
-        "ssl": true, 
-        "host": "", 
-        "trigger": "", 
-        "ownernick": "", 
-        "ownerhost": "",
-        "password": "", 
-        "port": 6697,
-        "hostlabel":""
+      "ident": "",
+      "realname": "",
+      "nick": "",
+      "channels": [
+        ""
+      ],
+      "ssl": true,
+      "host": "",
+      "trigger": "",
+      "ownernick": "",
+      "ownerhost": "",
+      "password": "",
+      "port": 6697,
+      "hostlabel": ""
     }
-]
+  ]
+}

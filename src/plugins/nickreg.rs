@@ -1,9 +1,10 @@
 use crate::msgfmts;
 use crate::parser::IRCMessage;
-use crate::SonicObject;
+use sonicobject::SonicObject;
+//use sonic_serde_object::SonicSerdeObject;
 use rand::seq::SliceRandom;
 use sha2::{Sha512, Digest};
-use serde_json::json;
+//use serde_json::json;
 //use acid_store::repo::value::ValueRepo;
 pub fn permissionlevel() -> u8 {
     1
@@ -32,10 +33,10 @@ pub fn main(ircmsg: IRCMessage, _db: &mut SonicObject, _essentials: SonicObject,
         hasher.update(unhashed.as_bytes());
         let result = hasher.finalize();
         let hexresult = hex::encode(result);
-        let mut thisuser = SonicObject::new(sonicobject::getemptyvalue());
+        let mut thisuser = SonicObject::new(sonic_serde_object::SonicSerdeObject::new_map());
         thisuser.insert("salt", saltstring);
         thisuser.insert("hash", hexresult);
-        thisuser.insert("hostnames", json!([ircmsg.hostname.as_ref().unwrap()]));
+        thisuser.insert("hostnames", vec![ircmsg.hostname.as_ref().unwrap()]);
         thisuser.insert("userlevel", 2);
         userdata.insert(ircmsg.sender.as_ref().unwrap(), thisuser.value);
         returnmsgs.push(msgfmts::Message::SaveUserData(userdata.clone()));

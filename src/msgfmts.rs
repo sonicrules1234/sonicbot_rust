@@ -1,4 +1,4 @@
-use crate::SonicObject;
+use sonicobject::SonicObject;
 pub enum Message {
     SendMsg(String, String),
     SavePluginData(String, SonicObject),

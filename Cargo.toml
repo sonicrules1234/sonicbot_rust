@@ -1,6 +1,6 @@
 [package]
 name = "sonicbot"
-version = "0.1.7"
+version = "0.1.8"
 authors = ["Westly Ward <sonicrules1234@gmail.com>"]
 edition = "2018"
 
@@ -19,8 +19,8 @@ serde_json = "1.0.64"
 rand = "0.8.4"
 reqwest = { version = "0.10", default-features = false, features = ["blocking", "rustls-tls"] }
 #sled = "0.34.6"
-sonicobject = { path = "./sonicobject" }
-acid-store = { version = "0.9.1", features = ["store-directory"] }
+#sonicobject = { path = "./sonicobject" }
+#acid-store = { version = "0.9.1", features = ["store-directory"] }
 sonicmacros = { path = "./sonicmacros" }
 humantime = "2.1.0"
 textwrap = "0.14.2"
@@ -28,6 +28,11 @@ regex = "1.5.4"
 hex = "0.4.3"
 sha2 = "0.9.5"
 ctrlc = "3.1.9"
+chrono = "0.4.19"
+include_dir = "0.6.2"
+sonic_serde_object = "0.1.1"
+aiml_ported = "0.1.5"
+sonicobject = "0.1.1"
 #empty-option = "0.1.1"
 
 [target.'cfg(target_os = "android")'.dependencies]

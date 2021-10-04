@@ -1,6 +1,6 @@
 use crate::msgfmts;
 use crate::parser::IRCMessage;
-use crate::SonicObject;
+use sonicobject::SonicObject;
 pub fn permissionlevel() -> u8 {
     1
 }
