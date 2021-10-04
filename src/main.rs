@@ -65,10 +65,10 @@ async fn main() {
         firstrun = true;
         //return;
     }
-    if !aimldirbuf.clone().exists() {
-        STD_AIML_DIR.extract(aimldirbuf.clone()).unwrap();
-    }
     if !aimldirbuf2.clone().exists() {
+        STD_AIML_DIR.extract(aimldirbuf2.clone()).unwrap();
+    }
+    if !aimldirbuf.clone().exists() {
         ALICE_BRAIN_DIR.extract(aimldirbuf.clone()).unwrap();
     }
     let mut k = Kernel::new();
@@ -160,10 +160,10 @@ fn main() {
         firstrun = true;
         //return;
     }
-    if !aimldirbuf.clone().exists() {
-        STD_AIML_DIR.extract(aimldirbuf.clone()).unwrap();
-    }
     if !aimldirbuf2.clone().exists() {
+        STD_AIML_DIR.extract(aimldirbuf2.clone()).unwrap();
+    }
+    if !aimldirbuf.clone().exists() {
         ALICE_BRAIN_DIR.extract(aimldirbuf.clone()).unwrap();
     }
     let mut k = Kernel::new();
