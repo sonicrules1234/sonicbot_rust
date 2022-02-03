@@ -22,7 +22,7 @@ use socketwrapper::SocketWrapper;
 //use std::fs;
 //use linewrapper::LineWrapper;
 use aiml_ported::kernel::Kernel;
-use sonicmacros::backinsert;
+use sonicbot_macros::backinsert;
 use sonicobject::{SonicPersistObject, SonicObject};
 use sonic_serde_object::SonicSerdeObject;
 pub enum CommandErrorReason {
@@ -52,8 +52,10 @@ pub struct SonicbotData {
     comprefix: String,
     wholeversion: String,
     hostlabel: String,
+    #[allow(dead_code)]
     datadir: PathBuf,
     db: SonicPersistObject,
+    #[allow(dead_code)]
     networkdata: SonicObject,
     essentialslist: Vec<String>,
     onandroid: bool,
@@ -65,7 +67,7 @@ impl SonicbotData {
     pub fn new(host: String, port: u16, nick: String, ssl: bool, ident: String, realname: String, ownernick: String, ownerhost: String, comprefix: String, hostlabel: String, wholeversion: String, datadir: PathBuf, onandroid: bool, tx: std::sync::mpsc::Sender<String>, aimlkernel: Kernel, useaiml: bool) -> Self {
         //let mut rep = OpenOptions::new().mode(OpenMode::Create).open(&DirectoryConfig{ path: datadir.as_path().join(format!("sonicbotdata_{}", hostlabel).as_str()) }).unwrap();//.create::<ValueRepo<String, _>>().unwrap();
         //let rep = OpenOptions::new(MemoryStore::new()).create::<ValueRepo<String, _>>().unwrap();
-        let mut db = SonicPersistObject::new(datadir.as_path().join(format!("sonicbotdata_{}", hostlabel).as_str()));
+        let mut db = SonicPersistObject::new(datadir.as_path().join(format!("sonicbotdata_{}.db", hostlabel).as_str()));
         let modlist = plugins::ModList::new();
         let essentialslist = vec!["PRIVMSG".to_string(), "JOIN".to_string(), "PART".to_string(), "NICK".to_string()];
         if !db.contains("essentials") {

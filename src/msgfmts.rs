@@ -1,6 +1,7 @@
 use sonicobject::SonicObject;
 pub enum Message {
     SendMsg(String, String),
+    #[allow(dead_code)]
     SavePluginData(String, SonicObject),
     SaveUserData(SonicObject),
     PartChannel(String, Option<String>),

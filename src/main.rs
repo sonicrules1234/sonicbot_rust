@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate include_dir;
-use std::thread::sleep;
-use std::time::Duration;
+
 use sonicbot::SonicbotData;
 use include_dir::Dir;
 use std::path::Path;
@@ -12,7 +11,7 @@ use serde_json::Value;
 use std::thread;
 use aiml_ported::kernel::Kernel;
 //use futures::executor::block_on;
-use std::sync::mpsc::{TryRecvError, channel};
+use std::sync::mpsc::channel;
 //use futures::{
 //    future::FutureExt, // for `.fuse()`
 //    pin_mut,
@@ -37,6 +36,7 @@ struct SonicbotConfig {
 #[cfg(target_os = "android")]
 #[macroquad::main("sonicbot")]
 async fn main() {
+    use std::sync::mpsc::TryRecvError;
     use macroquad::prelude::*;
     use linewrapper::LineWrapper;
     let (tx, rx) = channel::<String>();
@@ -47,18 +47,29 @@ async fn main() {
     static STD_AIML_DIR: Dir = include_dir!("./brain_save");    
     //let brain_save = include_dir::
     //let mut onandroid = Path::new("/storage/emulated/0/Android/data/rust.sonicbot/").exists();
-    let datadir = Path::new("/storage/emulated/0/Android/media/rust.sonicbot");
+    //let native_activity = macroquad::get_native_activity().unwrap();
+    //info!("[sonicbot] storage path is {:?}", native_activity.external_data_path());
+    let datadir = Path::new("/storage/emulated/0/sonicbot/");
     if !datadir.exists() {
-        std::fs::create_dir(datadir).unwrap();
+        if let Err(e) = std::fs::create_dir(datadir) {
+            //info!("[sonicbot] Err: {:?}", e);
+            let mut lw = LineWrapper::new();
+            linewrapper::lw_println!(lw, "ERROR: {:?}\nPlease give this app full permissions to access files on the external storage.", e);
+            loop {
+                lw.show_lines();
+                next_frame().await;
+            }
+        }
     }
     let datadirbuf = datadir.to_path_buf();
     let confpathbuf = datadir.join("conf.json");
     let confpath = confpathbuf.as_path();
     let mut firstrun = false;
     
-    let mut aimldirbuf = datadir.clone().join("alice_brain");
-    let mut aimldirbuf2 = datadir.clone().join("brain_save");
+    let aimldirbuf = datadir.clone().join("alice_brain");
+    let aimldirbuf2 = datadir.clone().join("brain_save");
     if !confpath.exists() {
+        
         let mut confdist = fs::File::create(&confpath).unwrap();
         confdist.write_all(defaultdata.as_bytes()).unwrap();
         
@@ -89,9 +100,9 @@ async fn main() {
     }
     
     let mut linew = LineWrapper::new();
-    let mut kclone = k.clone();
+    let kclone = k.clone();
     if !firstrun {
-        let mut kclone2 = kclone.clone();
+        let kclone2 = kclone.clone();
         for p in networklist {
             let mut aimlkern = kclone2.clone();
             aimlkern.set_bot_predicate("master", p.ownernick.clone());
@@ -99,7 +110,7 @@ async fn main() {
             aimlkern.set_bot_predicate("gender", "female");
             aimlkern.set_bot_predicate("favoritefood", "electricity");
             let ddirbuf = datadirbuf.clone();
-            let mut clonedtx = tx.clone();
+            let clonedtx = tx.clone();
             let wholeversion: String = format!("sonicbot_rust_v{}", VERSION.unwrap());
             let password = p.password.as_str().to_string();
             let channels = p.channels.to_vec();            
@@ -119,7 +130,7 @@ async fn main() {
         };
         //&sbot.showlines();
         //tx.clone().send("showlines").unwrap();
-        linew.showlines();
+        linew.show_lines();
         next_frame().await;
     }
 //    $crate::main();
@@ -127,6 +138,8 @@ async fn main() {
 
 #[cfg(not(target_os = "android"))]
 fn main() {
+    use std::thread::sleep;
+    use std::time::Duration;
     let (tx, _rx) = channel::<String>();
     let (tx2, rx2) = channel::<String>();
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
@@ -136,9 +149,9 @@ fn main() {
     //let mut onandroid = Path::new("/storage/emulated/0/Android/data/rust.sonicbot/").exists();
     let datadir = Path::new(".");
     //onandroid = true;
-    let datadirbuf = datadir.to_path_buf();
-    let confpathbuf = datadir.join("conf.json");
-    let confpath = confpathbuf.as_path();
+    //let datadirbuf = datadir.to_path_buf();
+    //let confpathbuf = datadir.join("conf.json");
+    //let confpath = confpathbuf.as_path();
     //let mut firstrun = false;
     static ALICE_BRAIN_DIR: Dir = include_dir!("./alice_brain");
     static STD_AIML_DIR: Dir = include_dir!("./brain_save");
@@ -150,15 +163,16 @@ fn main() {
     let datadirbuf = datadir.to_path_buf();
     let confpathbuf = datadir.join("conf.json");
     let confpath = confpathbuf.as_path();
-    let mut firstrun = false;
-    let mut aimldirbuf = datadir.clone().join("alice_brain");
-    let mut aimldirbuf2 = datadir.clone().join("brain_save");
+    //let mut firstrun = false;
+    let aimldirbuf = datadir.clone().join("alice_brain");
+    let aimldirbuf2 = datadir.clone().join("brain_save");
     if !confpath.exists() {
         let mut confdist = fs::File::create(&confpath).unwrap();
         confdist.write_all(defaultdata.as_bytes()).unwrap();
 
-        firstrun = true;
-        //return;
+        //firstrun = true;
+        println!("Blank config created at {}.  Please go and edit it before running the bot again.", confpath.display());
+        return;
     }
     if !aimldirbuf2.clone().exists() {
         STD_AIML_DIR.extract(aimldirbuf2.clone()).unwrap();
@@ -203,7 +217,7 @@ fn main() {
     for val in v["networks"].as_array().unwrap().to_vec() {
         networklist.push(serde_json::from_value::<SonicbotConfig>(val).unwrap());
     }
-    let mut kclone = k.clone();
+    let kclone = k.clone();
     for p in networklist {
         let ddirbuf = datadirbuf.clone();
         let clonedtx = tx.clone();
@@ -212,7 +226,7 @@ fn main() {
         let wholeversion: String = format!("sonicbot_rust_v{}", VERSION.unwrap());
         let password = p.password.as_str().to_string();
         let channels = p.channels.to_vec();            
-        let mut kclone2 = kclone.clone();
+        let kclone2 = kclone.clone();
         thread::spawn(move || {
             let mut aimlkern = kclone2.clone();
             aimlkern.set_bot_predicate("master", p.ownernick.clone());

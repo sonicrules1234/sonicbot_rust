@@ -1,6 +1,6 @@
 [package]
 name = "sonicbot"
-version = "0.1.9"
+version = "0.2.0"
 authors = ["Westly Ward <sonicrules1234@gmail.com>"]
 edition = "2018"
 
@@ -17,11 +17,6 @@ webpki-roots = "0.21.0"
 serde = { version = "1.0.126", features = ["derive"] }
 serde_json = "1.0.64"
 rand = "0.8.4"
-reqwest = { version = "0.10", default-features = false, features = ["blocking", "rustls-tls"] }
-#sled = "0.34.6"
-#sonicobject = { path = "./sonicobject" }
-#acid-store = { version = "0.9.1", features = ["store-directory"] }
-sonicmacros = { path = "./sonicmacros" }
 humantime = "2.1.0"
 textwrap = "0.14.2"
 regex = "1.5.4"
@@ -30,27 +25,26 @@ sha2 = "0.9.5"
 ctrlc = "3.1.9"
 chrono = "0.4.19"
 include_dir = "0.6.2"
-sonic_serde_object = "0.1.1"
+#sonic_serde_object = "0.1.1"
 aiml_ported = "0.1.5"
-sonicobject = "0.1.1"
-#empty-option = "0.1.1"
+sonic_serde_object = "0.2.6"
+sonicobject = "0.2.2"
+ureq = "2.4.0"
+linewrapper = "0.1.1"
+sonicbot-macros = "0.1.0"
+#linewrapper = { path = "../linewrapper" }
 
 [target.'cfg(target_os = "android")'.dependencies]
-macroquad = "0.3.7"
-linewrapper = { path = "./linewrapper" }
-#rustls = "0.19.1"
-#webpki = "0.21"
-#webpki-roots = "0.21.0"
-#serde = { version = "1.0.126", features = ["derive"] }
-#serde_json = "1.0.64"
-#rand = "0.8.4"
-#acid-store = { version = "0.8.0", features = ["store-directory"] }
-#sled = "0.34.6"
-#sonicobject = { path = "../sonicobject" }
-#empty-option = "0.1.1"
+#macroquad = { path = "../macroquad" }
 #ndk = "0.3.0"
-#ndk-glue = "0.3.0"
+macroquad = "0.3.13"
+#ndk-sys = "0.3.0"
 
+[build-dependencies]
+zip = { version = "0.5.13", default-features = false, features = ["deflate"] }
+ureq = "2.4.0"
+
+[features]
 
 [[package.metadata.android.permission]]
 name = "android.permission.INTERNET"
@@ -59,7 +53,11 @@ name = "android.permission.INTERNET"
 #name = "android.permission.INTERNET"
 
 [[package.metadata.android.permission]]
+name = "android.permission.MANAGE_EXTERNAL_STORAGE"
+
+[[package.metadata.android.permission]]
 name = "android.permission.WRITE_EXTERNAL_STORAGE"
+
 
 [package.metadata.android]
 build_targets = [ "armv7-linux-androideabi", "aarch64-linux-android" ]

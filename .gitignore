@@ -6,13 +6,9 @@
 /Cargo.lock
 /src/conf.json
 /release.sh
-/linewrapper/Cargo.lock
-/storage.db
-/linewrapper/target
-/sonicobject/target
-/sonicobject/Cargo.lock
-/sonicobject/test.db
-/sonicmacros/target
-/sonicmacros/Cargo.lock
 /sftp.json
 /sonicbotdata_*
+/brain_*
+/alice_*
+/copyreleases*
+/build.rs.bak

@@ -1,4 +1,4 @@
-use sonicmacros::pluginmacro;
+use sonicbot_macros::pluginmacro;
 pluginmacro!();
 /*use std::collections::HashMap;
 use crate::parser::IRCMessage;
