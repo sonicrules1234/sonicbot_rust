@@ -3,7 +3,11 @@ name = "sonicbot"
 version = "0.2.0"
 authors = ["Westly Ward <sonicrules1234@gmail.com>"]
 edition = "2018"
-
+description = "IRC bot that you can write plugins for"
+license-file = "LICENSE"
+repository = "https://github.com/sonicrules1234/sonicbot_rust"
+readme = "README.md"
+homepage = "https://github.com/sonicrules1234/sonicbot_rust"
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
